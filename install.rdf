@@ -7,7 +7,7 @@
         <em:version>0.1</em:version>
         <em:description></em:description>
         <em:creator>Matt Printz</em:creator>
-        <!--<em:homepageURL>http://hipokrit.com/privacyninja</em:homepageURL>-->
+        <em:homepageURL>https://github.com/mattprintz/PrivacyNinja</em:homepageURL>
         <em:type>2</em:type> <!-- type=extension --> 
         <em:bootstrap>true</em:bootstrap>
         <em:targetApplication>
