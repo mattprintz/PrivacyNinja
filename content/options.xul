@@ -1,0 +1,125 @@
+<?xml version="1.0"?>
+<!DOCTYPE window PUBLIC "-//MOZILLA//DTD XUL V1.0//EN" "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+<?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
+
+<prefwindow id="privacyninja_options"
+        title="PrivacyNinja Options"
+        xmlns:html="http://www.w3.org/1999/xhtml"
+        xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        width="800"
+        height="600"
+        screenX="20"
+        screenY="20"
+        persist="screenX screenY width height"
+        onload="loadPassword()"
+        >
+    <script type="text/javascript;version=1.8">
+        function browse(targetID) {
+            let fp = Components.classes["@mozilla.org/filepicker;1"]
+                             .createInstance(Components.interfaces.nsIFilePicker);
+            let elem = document.getElementById(targetID);
+            fp.show();
+            elem.value = fp.file.path;
+        }
+        
+        function loadPassword() {
+            let loginManager = Components.classes["@mozilla.org/login-manager;1"]
+                               .getService(Components.interfaces.nsILoginManager);
+            let logins = loginManager.findLogins({}, "chrome://privacyninja", null, "ssh_tunnel");
+            if (logins.length > 0) {
+                document.getElementById('opt-username').value = logins[0].username;
+                document.getElementById('opt-password').value = logins[0].password;
+            }
+            
+        }
+        
+        function setuser(username) {
+            let loginManager = Components.classes["@mozilla.org/login-manager;1"]
+                               .getService(Components.interfaces.nsILoginManager);
+            let nsLoginInfo = new Components.Constructor("@mozilla.org/login-manager/loginInfo;1", Components.interfaces.nsILoginInfo, "init");
+            let logins = loginManager.findLogins({}, "chrome://privacyninja", null, "ssh_tunnel");
+            if (logins.length > 0) {
+                let loginInfo = new nsLoginInfo("chrome://privacyninja", null, "ssh_tunnel", username, logins[0].password, "", "");
+                loginManager.modifyLogin(logins[0], loginInfo);
+            }
+            else {
+                let loginInfo = new nsLoginInfo("chrome://privacyninja", null, "ssh_tunnel", username, "\b", "", "");
+                loginManager.addLogin(loginInfo);
+            }
+        }
+        
+        function setpass(password) {
+            let loginManager = Components.classes["@mozilla.org/login-manager;1"]
+                               .getService(Components.interfaces.nsILoginManager);
+            let nsLoginInfo = new Components.Constructor("@mozilla.org/login-manager/loginInfo;1", Components.interfaces.nsILoginInfo, "init");
+            let logins = loginManager.findLogins({}, "chrome://privacyninja", null, "ssh_tunnel");
+            if (logins.length > 0) {
+                let loginInfo = new nsLoginInfo("chrome://privacyninja", null, "ssh_tunnel", logins[0].username, password, "", "");
+                loginManager.modifyLogin(logins[0], loginInfo);
+            }
+            else {
+                let loginInfo = new nsLoginInfo("chrome://privacyninja", null, "ssh_tunnel", "\b", password, "", "");
+                loginManager.addLogin(loginInfo);
+            }
+        }
+    </script>
+    
+    <prefpane>
+        <preferences>
+            <preference id="pref-proxyHost" name="extensions.privacyninja.proxy_host" type="string"/>
+            <preference id="pref-proxyPort" name="extensions.privacyninja.proxy_port" type="int"/>
+            <preference id="pref-useTunnel" name="extensions.privacyninja.use_tunnel" type="bool"/>
+            <preference id="pref-localPort" name="extensions.privacyninja.local_port" type="int"/>
+            <preference id="pref-tunnelArgs" name="extensions.privacyninja.tunnel_args" type="string"/>
+            <preference id="pref-tunnelKeyfile" name="extensions.privacyninja.tunnel_keyfile" type="string"/>
+            <preference id="pref-tunnelExecutable" name="extensions.privacyninja.tunnel_executable" type="string"/>
+            <!--<preference id="pref-" name="" type=""/>-->
+        </preferences>
+        
+        <hbox align="center">
+            <label value="Proxy Host:" control="opt-proxyHost"/>
+            <textbox id="opt-proxyHost" preference="pref-proxyHost"/>
+            <label value="Proxy Port:" control="opt-proxyPort"/>
+            <textbox id="opt-proxyPort" preference="pref-proxyPort" type="number"/>
+        </hbox>
+        <groupbox>
+            <caption>
+                <checkbox label="Use SSH Tunnel" preference="pref-useTunnel"/>
+            </caption>
+            
+            <hbox align="center">
+                <label value="Tunnel Executable:" control="opt-tunnelExecutable"/>
+                <textbox id="opt-tunnelExecutable" preference="pref-tunnelExecutable"/>
+                <button label="Browse" oncommand="browse('opt-tunnelExecutable');"/>
+            </hbox>
+            <hbox align="center">
+                <label value="Local Port:" control="opt-localPort"/>
+                <textbox id="opt-localPort" preference="pref-localPort" type="number"/>
+            </hbox>
+            
+            <label value="SSH Tunnel Arguments" control="opt-tunnelArgs"/>
+            <textbox id="opt-tunnelArgs" preference="pref-tunnelArgs"/>
+            
+       </groupbox>
+        <groupbox>
+            <caption>
+                <label value="Credentials (Optional)"/>
+            </caption>
+            <hbox align="center">
+                <label value="Username:" control="opt-username"/>
+                <textbox id="opt-username" onchange="setuser(this.value);"/>
+            </hbox>
+            <hbox align="center">
+                <label value="Password:" control="opt-password"/>
+                <textbox id="opt-password" type="password" onchange="setpass(this.value);"/>
+            </hbox>
+            <hbox align="center">
+                <label value="SSH Key File:" control="opt-tunnelKeyfile"/>
+                <textbox id="opt-tunnelKeyfile"/>
+                <button label="Browse" oncommand="browse('opt-tunnelKeyfile');"/>
+            </hbox>
+        </groupbox>
+    </prefpane>
+</prefwindow>
