@@ -6,7 +6,103 @@ function alert(string) {
         win.alert(string);
 }
 
+const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
+Cu.import("resource://gre/modules/Services.jsm");
+
+var privacyninja_ww = {
+    
+    watchWindows: function(loadCallback) {
+        // Wrap the callback in a function that ignores failures
+        function watcher(window) {
+            try {
+                // Now that the window has loaded, only handle browser windows
+                let {documentElement} = window.document;
+                if (documentElement.getAttribute("windowtype") == "navigator:browser") {
+                    loadCallback(window);
+                }
+            }
+            catch(ex) {}
+        }
+    
+        // Wait for the window to finish loading before running the callback
+        function runOnLoad(window) {
+            // Listen for one load event before checking the window type
+            window.addEventListener("load", function runOnce() {
+                window.removeEventListener("load", runOnce, false);
+                watcher(window);
+            }, false);
+        }
+    
+        // Add functionality to existing windows
+        let windows = Services.wm.getEnumerator(null);
+        while (windows.hasMoreElements()) {
+            // Only run the watcher immediately if the window is completely loaded
+            let window = windows.getNext();
+            if (window.document.readyState == "complete")
+                watcher(window);
+            // Wait for the window to load before continuing
+            else
+                runOnLoad(window);
+        }
+    
+        // Watch for new browser windows opening then wait for it to load
+        function windowWatcher(subject, topic) {
+            if (topic == "domwindowopened")
+                runOnLoad(subject);
+        }
+        Services.ww.registerNotification(windowWatcher);
+    
+        // Make sure to stop watching for windows if we're unloading
+        this.unload(function() Services.ww.unregisterNotification(windowWatcher));
+    },
+    
+    unload: function(callback, container) {
+        // Initialize the array of unloaders on the first usage
+        let unloaders = this.unload.unloaders;
+        if (unloaders == null)
+            unloaders = this.unload.unloaders = [];
+    
+        // Calling with no arguments runs all the unloader callbacks
+        if (callback == null) {
+            unloaders.slice().forEach(function(unloader) unloader());
+            unloaders.length = 0;
+            return;
+        }
+    
+        // The callback is bound to the lifetime of the container if we have one
+        if (container != null) {
+            // Remove the unloader when the container unloads
+            container.addEventListener("unload", removeUnloader, false);
+    
+            // Wrap the callback to additionally remove the unload listener
+            let origCallback = callback;
+            callback = function() {
+                container.removeEventListener("unload", removeUnloader, false);
+                origCallback();
+            }
+        }
+    
+        // Wrap the callback in a function that ignores failures
+        function unloader() {
+            try {
+                callback();
+            }
+            catch(ex) {}
+        }
+        unloaders.push(unloader);
+    
+        // Provide a way to remove the unloader
+        function removeUnloader() {
+            let index = unloaders.indexOf(unloader);
+            if (index != -1)
+                unloaders.splice(index, 1);
+        }
+        return removeUnloader;
+    }
+    
+};
 //Components.utils.import("resource://gre/modules/Services.jsm");
+//Components.utils.import("resource://privacyninja/content/windowwatcher.jsm", privacyninja_ww);
 
 function PrivacyNinja(){}
 PrivacyNinja.prototype = {
@@ -70,6 +166,17 @@ PrivacyNinja.prototype = {
             this.closeTunnel();
         }
         this.restoreDefaultProxySettings();
+        
+        // Remove menuitems
+        let windows = Services.wm.getEnumerator(null);
+        while (windows.hasMoreElements()) {
+            // Only run the watcher immediately if the window is completely loaded
+            let window = windows.getNext();
+            let menuItem = window.document.getElementById("privacyninja_options_menuitem");
+            if (menuItem)
+                menuItem.parentNode.removeChild(menuItem);
+        }
+        
         this._os.removeObserver(this, "private-browsing", false);
         this._os.removeObserver(this, "quit-application", false);
     },
@@ -204,6 +311,16 @@ PrivacyNinja.prototype = {
         loginManager.addLogin(loginInfo);
     },
     
+    onWindow: function(win) {
+        let document = win.document;
+        let toolsMenu = document.getElementById("menu_ToolsPopup");
+        let pnMenuItem = document.createElement("menuitem");
+        pnMenuItem.setAttribute("id", "privacyninja_options_menuitem");
+        pnMenuItem.setAttribute("label", "PrivacyNinja Options");
+        pnMenuItem.setAttribute("oncommand", "window.open('chrome://privacyninja/content/options.xul', 'privacyninja_options', 'chrome,resizable=true');");
+        toolsMenu.appendChild(pnMenuItem);
+    },
+    
     observe: function (aSubject, aTopic, aData) {
         if (aTopic == "private-browsing") {
             if (aData == "enter") {
@@ -232,6 +349,7 @@ var privacyninja = new PrivacyNinja();
 
 function startup(data, reason) {
     privacyninja.init();
+    privacyninja_ww.watchWindows(privacyninja.onWindow);
     if(privacyninja.hasSavedProxySettings()) {
         privacyninja.restoreDefaultProxySettings();
     }
@@ -241,11 +359,16 @@ function shutdown(data, reason) {
     if(privacyninja.hasSavedProxySettings()) {
         privacyninja.restoreDefaultProxySettings();
     }
+    try{
+    privacyninja_ww.unload();
     privacyninja.shutdown();
+    } catch(e) {alert(e)}
 }
 
 // Unused
-function install(data, reason) {}
+function install(data, reason) {
+    //TODO: Display config wizard in tab
+}
 
 // Unused
 function uninstall(data, reason) {}
