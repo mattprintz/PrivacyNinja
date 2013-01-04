@@ -1,3 +1,5 @@
+Components.utils.import("resource://gre/modules/Services.jsm");
+
 function browse(targetID) {
     let fp = Components.classes["@mozilla.org/filepicker;1"]
                      .createInstance(Components.interfaces.nsIFilePicker);
@@ -7,8 +9,7 @@ function browse(targetID) {
 }
 
 function loadPassword() {
-    let loginManager = Components.classes["@mozilla.org/login-manager;1"]
-                       .getService(Components.interfaces.nsILoginManager);
+    let loginManager = Services.logins;
     let logins = loginManager.findLogins({}, "chrome://privacyninja", null, "ssh_tunnel");
     if (logins.length > 0) {
         document.getElementById('opt-username').value = logins[0].username;
@@ -18,8 +19,7 @@ function loadPassword() {
 }
 
 function setuser(username) {
-    let loginManager = Components.classes["@mozilla.org/login-manager;1"]
-                       .getService(Components.interfaces.nsILoginManager);
+    let loginManager = Services.logins;
     let nsLoginInfo = new Components.Constructor("@mozilla.org/login-manager/loginInfo;1", Components.interfaces.nsILoginInfo, "init");
     let logins = loginManager.findLogins({}, "chrome://privacyninja", null, "ssh_tunnel");
     if (logins.length > 0) {
@@ -33,8 +33,7 @@ function setuser(username) {
 }
 
 function setpass(password) {
-    let loginManager = Components.classes["@mozilla.org/login-manager;1"]
-                       .getService(Components.interfaces.nsILoginManager);
+    let loginManager = Services.logins;
     let nsLoginInfo = new Components.Constructor("@mozilla.org/login-manager/loginInfo;1", Components.interfaces.nsILoginInfo, "init");
     let logins = loginManager.findLogins({}, "chrome://privacyninja", null, "ssh_tunnel");
     if (logins.length > 0) {

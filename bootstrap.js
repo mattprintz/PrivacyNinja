@@ -1,13 +1,12 @@
+const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
+Components.utils.import("resource://gre/modules/Services.jsm");
+
 function alert(string) {
-    let wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
-                     .getService(Components.interfaces.nsIWindowMediator);
+    let wm = Services.wm;
     let win = wm.getMostRecentWindow("navigator:browser");
     if(win)
         win.alert(string);
 }
-
-const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
-Cu.import("resource://gre/modules/Services.jsm");
 
 var privacyninja_ww = {
     
@@ -66,7 +65,7 @@ var privacyninja_ww = {
         if (callback == null) {
             unloaders.slice().forEach(function(unloader) unloader());
             unloaders.length = 0;
-            return;
+            return null;
         }
     
         // The callback is bound to the lifetime of the container if we have one
@@ -101,8 +100,6 @@ var privacyninja_ww = {
     }
     
 };
-//Components.utils.import("resource://gre/modules/Services.jsm");
-//Components.utils.import("resource://privacyninja/content/windowwatcher.jsm", privacyninja_ww);
 
 function PrivacyNinja(){}
 PrivacyNinja.prototype = {
@@ -116,8 +113,7 @@ PrivacyNinja.prototype = {
     
     init: function() {
         this._inited = true;
-        this._os = Components.classes["@mozilla.org/observer-service;1"]
-                            .getService(Components.interfaces.nsIObserverService);
+        this._os = Services.obs;
         this._os.addObserver(this, "private-browsing", false);
         this._os.addObserver(this, "quit-application", false);
         
@@ -125,12 +121,9 @@ PrivacyNinja.prototype = {
                                   getService(Components.interfaces.nsIPrivateBrowsingService).
                                   privateBrowsingEnabled;
         
-        this._ps = Components.classes["@mozilla.org/preferences-service;1"]
-                            .getService(Components.interfaces.nsIPrefService);
+        this._ps = Services.prefs;
         
-        var xulRuntime = Components.classes["@mozilla.org/xre/app-info;1"]
-                    .getService(Components.interfaces.nsIXULRuntime);
-        this._osType = xulRuntime.OS;
+        this._osType = Services.appinfo.OS;
         
         this.setDefaults();
     },
@@ -289,8 +282,7 @@ PrivacyNinja.prototype = {
     },
     
     getPassword: function() {
-        let loginManager = Components.classes["@mozilla.org/login-manager;1"]
-                           .getService(Components.interfaces.nsILoginManager);
+        let loginManager = Services.logins;
         let logins = loginManager.findLogins({}, this.PASSDOM, null, "ssh_tunnel");
         if (logins.length > 0) {
             return {
@@ -304,8 +296,7 @@ PrivacyNinja.prototype = {
     },
     
     setPassword: function(username, password) {
-        let loginManager = Components.classes["@mozilla.org/login-manager;1"]
-                           .getService(Components.interfaces.nsILoginManager);
+        let loginManager = Services.logins;
         let nsLoginInfo = new Components.Constructor("@mozilla.org/login-manager/loginInfo;1", Components.interfaces.nsILoginInfo, "init");
         let loginInfo = new nsLoginInfo(this.PASSDOM, null, "ssh_tunnel", username, password, "", "");
         loginManager.addLogin(loginInfo);
@@ -317,7 +308,9 @@ PrivacyNinja.prototype = {
         let pnMenuItem = document.createElement("menuitem");
         pnMenuItem.setAttribute("id", "privacyninja_options_menuitem");
         pnMenuItem.setAttribute("label", "PrivacyNinja Options");
-        pnMenuItem.setAttribute("oncommand", "window.open('chrome://privacyninja/content/options.xul', 'privacyninja_options', 'chrome,resizable=true');");
+        pnMenuItem.addEventListener("command", function(){
+            win.open('chrome://privacyninja/content/options.xul', 'privacyninja_options', 'chrome,resizable=true');
+        }, false);
         toolsMenu.appendChild(pnMenuItem);
     },
     
@@ -333,9 +326,6 @@ PrivacyNinja.prototype = {
         }
         else if (aTopic == "quit-application") {
             this.shutdown();
-        }
-        else if (aTopic == "domwindowopened") {
-            // TODO: Add way to open optiosn from dom windows
         }
     },
   

@@ -25,14 +25,13 @@
             <preference id="pref-tunnelArgs" name="extensions.privacyninja.tunnel_args" type="string"/>
             <preference id="pref-tunnelKeyfile" name="extensions.privacyninja.tunnel_keyfile" type="string"/>
             <preference id="pref-tunnelExecutable" name="extensions.privacyninja.tunnel_executable" type="string"/>
-            <!--<preference id="pref-" name="" type=""/>-->
         </preferences>
         
         <hbox align="center">
-            <label value="Proxy Host:" control="opt-proxyHost"/>
-            <textbox id="opt-proxyHost" preference="pref-proxyHost"/>
-            <label value="Proxy Port:" control="opt-proxyPort"/>
-            <textbox id="opt-proxyPort" preference="pref-proxyPort" type="number"/>
+            <label   value="Proxy Host:" control="opt-proxyHost"/>
+            <textbox id="opt-proxyHost"  preference="pref-proxyHost"/>
+            <label   value="Proxy Port:" control="opt-proxyPort"/>
+            <textbox id="opt-proxyPort"  preference="pref-proxyPort" type="number"/>
         </hbox>
         <groupbox>
             <caption>
@@ -40,17 +39,17 @@
             </caption>
             
             <hbox align="center">
-                <label value="Tunnel Executable:" control="opt-tunnelExecutable"/>
-                <textbox id="opt-tunnelExecutable" preference="pref-tunnelExecutable"/>
-                <button label="Browse" oncommand="browse('opt-tunnelExecutable');"/>
+                <label   value="Tunnel Executable:" control="opt-tunnelExecutable"/>
+                <textbox id="opt-tunnelExecutable"  preference="pref-tunnelExecutable"/>
+                <button  label="Browse"             oncommand="browse('opt-tunnelExecutable');"/>
             </hbox>
             <hbox align="center">
-                <label value="Local Port:" control="opt-localPort"/>
-                <textbox id="opt-localPort" preference="pref-localPort" type="number"/>
+                <label   value="Local Port:" control="opt-localPort"/>
+                <textbox id="opt-localPort"  preference="pref-localPort" type="number"/>
             </hbox>
             
-            <label value="SSH Tunnel Arguments" control="opt-tunnelArgs"/>
-            <textbox id="opt-tunnelArgs" preference="pref-tunnelArgs"/>
+            <label   value="SSH Tunnel Arguments" control="opt-tunnelArgs"/>
+            <textbox id="opt-tunnelArgs"          preference="pref-tunnelArgs"/>
             
        </groupbox>
         <groupbox>
@@ -58,17 +57,17 @@
                 <label value="Credentials (Optional)"/>
             </caption>
             <hbox align="center">
-                <label value="Username:" control="opt-username"/>
+                <label   value="Username:" control="opt-username"/>
                 <textbox id="opt-username" onchange="setuser(this.value);"/>
             </hbox>
             <hbox align="center">
-                <label value="Password:" control="opt-password"/>
+                <label   value="Password:" control="opt-password"/>
                 <textbox id="opt-password" type="password" onchange="setpass(this.value);"/>
             </hbox>
             <hbox align="center">
-                <label value="SSH Key File:" control="opt-tunnelKeyfile"/>
+                <label   value="SSH Key File:" control="opt-tunnelKeyfile"/>
                 <textbox id="opt-tunnelKeyfile"/>
-                <button label="Browse" oncommand="browse('opt-tunnelKeyfile');"/>
+                <button  label="Browse"        oncommand="browse('opt-tunnelKeyfile');"/>
             </hbox>
         </groupbox>
     </prefpane>
